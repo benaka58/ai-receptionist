@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Receptionist - Admin Dashboard</title>
+<style>
+  :root{
+    --bg:#0f1420;
+    --bg-soft:#161d2e;
+    --panel:#1b2338;
+    --panel-2:#212b45;
+    --border:#2a3452;
+    --text:#e8ecf7;
+    --text-dim:#9aa4c0;
+    --accent:#6c8dff;
+    --accent-2:#8e6cff;
+    --accent-glow:rgba(108,141,255,0.35);
+    --good:#3ddc97;
+    --warn:#ffb454;
+    --bad:#ff6b6b;
+    --radius:14px;
+    font-size:15px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:radial-gradient(circle at 20% -10%, #1a2340 0%, var(--bg) 45%);
+    color:var(--text);
+    min-height:100vh;
+  }
+  .header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 28px;
+    background:linear-gradient(90deg, var(--panel), var(--panel-2));
+    border-bottom:1px solid var(--border);
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  .header h1{
+    margin:0;
+    font-size:1.25rem;
+    font-weight:600;
+    letter-spacing:.3px;
+  }
+  .header h1 span{
+    background:linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  #logoutBtn{
+    background:transparent;
+    color:var(--text-dim);
+    border:1px solid var(--border);
+    padding:8px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:.2s;
+  }
+  #logoutBtn:hover{ border-color:var(--bad); color:var(--bad); }
+
+  .layout{
+    display:flex;
+    min-height:calc(100vh - 66px);
+  }
+  .sidebar{
+    width:230px;
+    background:var(--bg-soft);
+    border-right:1px solid var(--border);
+    padding:20px 14px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .nav-btn{
+    text-align:left;
+    background:transparent;
+    border:none;
+    color:var(--text-dim);
+    padding:12px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:.95rem;
+    transition:.2s;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .nav-btn:hover{ background:var(--panel); color:var(--text); }
+  .nav-btn.active{
+    background:linear-gradient(90deg, var(--accent-glow), transparent);
+    color:var(--text);
+    border-left:3px solid var(--accent);
+    font-weight:600;
+  }
+
+  .main{
+    flex:1;
+    padding:28px 32px 60px;
+    overflow-y:auto;
+  }
+  .section{ display:none; animation:fadeIn .25s ease; }
+  .section.active{ display:block; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  h2{ margin-top:0; font-weight:600; }
+
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(180px,1fr));
+    gap:18px;
+    margin-bottom:26px;
+  }
+  .card{
+    background:linear-gradient(160deg, var(--panel), var(--panel-2));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+  }
+  .card h3{
+    margin:0 0 8px;
+    font-size:.85rem;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:.6px;
+  }
+  .card p{ margin:0; font-size:1.9rem; font-weight:700; }
+  #systemStatus.ok{ color:var(--good); }
+  #systemStatus.bad{ color:var(--bad); }
+
+  .voice-box{
+    background:linear-gradient(135deg, var(--panel), var(--panel-2));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:24px;
+    margin-bottom:24px;
+    text-align:center;
+  }
+  .voice-box h3{ margin-top:0; }
+  .voice-box p{ color:var(--text-dim); margin-bottom:18px; }
+  .mic-btn{
+    background:linear-gradient(90deg, var(--accent), var(--accent-2));
+    border:none;
+    color:#fff;
+    padding:14px 26px;
+    border-radius:50px;
+    font-size:1rem;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 0 0 0 var(--accent-glow);
+    transition:transform .15s, box-shadow .3s;
+  }
+  .mic-btn:hover{ transform:translateY(-1px); }
+  .mic-btn.listening{
+    animation:pulse 1.4s infinite;
+    background:linear-gradient(90deg, var(--bad), var(--accent-2));
+  }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 var(--accent-glow); }
+    70%{ box-shadow:0 0 0 18px rgba(108,141,255,0); }
+    100%{ box-shadow:0 0 0 0 rgba(108,141,255,0); }
+  }
+  #voiceStatus, #visitorVoiceStatus, #appointmentVoiceStatus{
+    margin-top:14px;
+    color:var(--text-dim);
+    font-size:.9rem;
+    min-height:1.2em;
+  }
+  .voice-transcript{
+    margin-top:10px;
+    font-style:italic;
+    color:var(--accent);
+    min-height:1.2em;
+  }
+
+  .quick-actions{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(160px,1fr));
+    gap:14px;
+  }
+  .quick-btn{
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:16px;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:.9rem;
+    transition:.2s;
+  }
+  .quick-btn:hover{ border-color:var(--accent); background:var(--panel-2); }
+
+  .form-box{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:26px;
+    max-width:520px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .form-group{ display:flex; flex-direction:column; gap:6px; }
+  .form-group label{ font-size:.85rem; color:var(--text-dim); }
+  .form-group input, .form-group select{
+    background:var(--bg-soft);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:.95rem;
+  }
+  .form-group input:focus, .form-group select:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  .primary-btn{
+    background:linear-gradient(90deg, var(--accent), var(--accent-2));
+    border:none;
+    color:#fff;
+    padding:12px 18px;
+    border-radius:10px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .primary-btn:hover{ opacity:.92; }
+  #visitorMessage, #appointmentMessage{
+    min-height:1.2em;
+    font-size:.9rem;
+  }
+  .msg-ok{ color:var(--good); }
+  .msg-err{ color:var(--bad); }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  th, td{
+    padding:12px 14px;
+    text-align:left;
+    border-bottom:1px solid var(--border);
+    font-size:.9rem;
+  }
+  th{
+    background:var(--panel-2);
+    color:var(--text-dim);
+    text-transform:uppercase;
+    font-size:.75rem;
+    letter-spacing:.5px;
+  }
+  tr:last-child td{ border-bottom:none; }
+  tr:hover td{ background:rgba(255,255,255,0.02); }
+  .empty-row td{ text-align:center; color:var(--text-dim); padding:24px; }
+  .badge{
+    padding:3px 10px;
+    border-radius:20px;
+    font-size:.75rem;
+    font-weight:600;
+  }
+  .badge.live{ background:rgba(61,220,151,.15); color:var(--good); }
+  .badge.manual{ background:rgba(108,141,255,.15); color:var(--accent); }
+
+  @media (max-width:760px){
+    .layout{ flex-direction:column; }
+    .sidebar{ width:100%; flex-direction:row; overflow-x:auto; }
+    .main{ padding:20px; }
+  }
+</style>
+</head>
+<body>
+
+  <header class="header">
+    <h1>AI <span>Receptionist</span> — Admin Dashboard</h1>
+    <button id="logoutBtn" type="button">Logout</button>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar">
+      <button class="nav-btn active" data-section="dashboardSection" type="button">🏠 Dashboard</button>
+      <button class="nav-btn" data-section="visitorSection" type="button">🧑‍💼 Register Visitor</button>
+      <button class="nav-btn" data-section="appointmentSection" type="button">📅 Book Appointment</button>
+      <button class="nav-btn" data-section="visitorsSection" type="button">👥 Visitors</button>
+      <button class="nav-btn" data-section="appointmentsSection" type="button">📋 Appointments</button>
+    </aside>
+
+    <main class="main">
+
+      <!-- DASHBOARD -->
+      <section id="dashboardSection" class="section active">
+        <h2>Dashboard Overview</h2>
+
+        <div class="cards">
+          <div class="card">
+            <h3>Total Visitors</h3>
+            <p id="visitorCount">0</p>
+          </div>
+          <div class="card">
+            <h3>Total Appointments</h3>
+            <p id="appointmentCount">0</p>
+          </div>
+          <div class="card">
+            <h3>System Status</h3>
+            <p id="systemStatus">Checking...</p>
+          </div>
+        </div>
+
+        <div class="voice-box">
+          <h3>🎙️ Voice Assistant — Live Booking</h3>
+          <p>
+            Click start and speak naturally, e.g. <em>"Book an appointment for John Smith,
+            phone 9876543210, meet Doctor Reddy, on September 15th at 3 PM, purpose checkup."</em><br>
+            The appointment is created immediately — no form needed.
+          </p>
+          <button id="globalMicBtn" class="mic-btn" type="button">🎤 Start Voice Assistant</button>
+          <p id="voiceStatus">Voice assistant ready.</p>
+          <p id="voiceTranscript" class="voice-transcript"></p>
+        </div>
+
+        <div class="quick-actions">
+          <button class="quick-btn" data-section="visitorSection" type="button">➕ Register Visitor</button>
+          <button class="quick-btn" data-section="appointmentSection" type="button">➕ Book Appointment</button>
+          <button class="quick-btn" data-section="visitorsSection" type="button">📄 View Visitors</button>
+          <button class="quick-btn" data-section="appointmentsSection" type="button">📄 View Appointments</button>
+        </div>
+      </section>
+
+
+      <!-- REGISTER VISITOR -->
+      <section id="visitorSection" class="section">
+        <h2>Register Visitor</h2>
+
+        <div class="voice-box">
+          <p>Use your microphone to fill the visitor form.</p>
+          <button id="visitorMicBtn" class="mic-btn" type="button">🎤 Use Microphone</button>
+          <p id="visitorVoiceStatus">Voice assistant ready.</p>
+          <p id="visitorTranscript" class="voice-transcript"></p>
+        </div>
+
+        <form id="visitorForm" class="form-box">
+          <div class="form-group">
+            <label for="visitorName">Visitor Name</label>
+            <input id="visitorName" name="name" type="text" required placeholder="Enter visitor name">
+          </div>
+          <div class="form-group">
+            <label for="visitorPhone">Phone Number</label>
+            <input id="visitorPhone" name="phone" type="tel" placeholder="Enter phone number">
+          </div>
+          <div class="form-group">
+            <label for="visitorPerson">Person to Meet</label>
+            <input id="visitorPerson" name="person" type="text" placeholder="Person to meet">
+          </div>
+          <div class="form-group">
+            <label for="visitorPurpose">Purpose</label>
+            <input id="visitorPurpose" name="purpose" type="text" placeholder="Purpose of visit">
+          </div>
+          <button class="primary-btn" type="submit">Register Visitor</button>
+          <p id="visitorMessage"></p>
+        </form>
+      </section>
+
+
+      <!-- BOOK APPOINTMENT -->
+      <section id="appointmentSection" class="section">
+        <h2>Book Appointment</h2>
+
+        <div class="voice-box">
+          <p>Use your microphone to fill the appointment form.</p>
+          <button id="appointmentMicBtn" class="mic-btn" type="button">🎤 Use Microphone</button>
+          <p id="appointmentVoiceStatus">Voice assistant ready.</p>
+          <p id="appointmentTranscript" class="voice-transcript"></p>
+        </div>
+
+        <form id="appointmentForm" class="form-box">
+          <div class="form-group">
+            <label for="appointmentName">Visitor Name</label>
+            <input id="appointmentName" name="name" type="text" required placeholder="Enter visitor name">
+          </div>
+          <div class="form-group">
+            <label for="appointmentPhone">Phone Number</label>
+            <input id="appointmentPhone" name="phone" type="tel" placeholder="Enter phone number">
+          </div>
+          <div class="form-group">
+            <label for="appointmentPerson">Person to Meet</label>
+            <input id="appointmentPerson" name="person" type="text" required placeholder="Person to meet">
+          </div>
+          <div class="form-group">
+            <label for="appointmentDate">Date</label>
+            <input id="appointmentDate" name="date" type="date" required>
+          </div>
+          <div class="form-group">
+            <label for="appointmentTime">Time</label>
+            <input id="appointmentTime" name="time" type="time" required>
+          </div>
+          <div class="form-group">
+            <label for="appointmentPurpose">Purpose</label>
+            <input id="appointmentPurpose" name="purpose" type="text" placeholder="Purpose of appointment">
+          </div>
+          <button class="primary-btn" type="submit">Book Appointment</button>
+          <p id="appointmentMessage"></p>
+        </form>
+      </section>
+
+
+      <!-- VISITORS LIST -->
+      <section id="visitorsSection" class="section">
+        <h2>Visitors</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th><th>Phone</th><th>Person to Meet</th><th>Purpose</th><th>Time Logged</th>
+            </tr>
+          </thead>
+          <tbody id="visitorsTableBody">
+            <tr class="empty-row"><td colspan="5">No visitors registered yet.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+
+      <!-- APPOINTMENTS LIST -->
+      <section id="appointmentsSection" class="section">
+        <h2>Appointments</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th><th>Phone</th><th>Person to Meet</th><th>Date</th><th>Time</th><th>Purpose</th><th>Source</th>
+            </tr>
+          </thead>
+          <tbody id="appointmentsTableBody">
+            <tr class="empty-row"><td colspan="7">No appointments booked yet.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- STATE ---------- */
+  const STORAGE_KEY = "aiReceptionistData_v1";
+  let state = { visitors: [], appointments: [] };
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){ state = JSON.parse(raw); }
+    }catch(e){ console.warn("Could not load saved data", e); }
+  }
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch(e){ console.warn("Could not save data", e); }
+  }
+
+  /* ---------- NAVIGATION ---------- */
+  function showSection(id){
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+    const target = document.getElementById(id);
+    if(target) target.classList.add("active");
+    document.querySelectorAll(`.nav-btn[data-section="${id}"]`).forEach(b => b.classList.add("active"));
+  }
+  document.querySelectorAll(".nav-btn, .quick-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=> showSection(btn.dataset.section));
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", ()=>{
+    if(confirm("Log out of the admin dashboard?")){
+      alert("Logged out.");
+    }
+  });
+
+  /* ---------- RENDERING ---------- */
+  function renderDashboardCounts(){
+    document.getElementById("visitorCount").textContent = state.visitors.length;
+    document.getElementById("appointmentCount").textContent = state.appointments.length;
+  }
+
+  function renderVisitorsTable(){
+    const body = document.getElementById("visitorsTableBody");
+    if(state.visitors.length === 0){
+      body.innerHTML = '<tr class="empty-row"><td colspan="5">No visitors registered yet.</td></tr>';
+      return;
+    }
+    body.innerHTML = state.visitors.map(v => `
+      <tr>
+        <td>${escapeHtml(v.name)}</td>
+        <td>${escapeHtml(v.phone || "-")}</td>
+        <td>${escapeHtml(v.person || "-")}</td>
+        <td>${escapeHtml(v.purpose || "-")}</td>
+        <td>${escapeHtml(v.loggedAt)}</td>
+      </tr>
+    `).join("");
+  }
+
+  function renderAppointmentsTable(){
+    const body = document.getElementById("appointmentsTableBody");
+    if(state.appointments.length === 0){
+      body.innerHTML = '<tr class="empty-row"><td colspan="7">No appointments booked yet.</td></tr>';
+      return;
+    }
+    body.innerHTML = state.appointments.map(a => `
+      <tr>
+        <td>${escapeHtml(a.name)}</td>
+        <td>${escapeHtml(a.phone || "-")}</td>
+        <td>${escapeHtml(a.person)}</td>
+        <td>${escapeHtml(a.date || "-")}</td>
+        <td>${escapeHtml(a.time || "-")}</td>
+        <td>${escapeHtml(a.purpose || "-")}</td>
+        <td><span class="badge ${a.source === 'voice' ? 'live' : 'manual'}">${a.source === 'voice' ? 'Voice (live)' : 'Manual'}</span></td>
+      </tr>
+    `).join("");
+  }
+
+  function escapeHtml(str){
+    if(str === undefined || str === null) return "";
+    return String(str)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function renderAll(){
+    renderDashboardCounts();
+    renderVisitorsTable();
+    renderAppointmentsTable();
+    saveState();
+  }
+
+  /* ---------- SYSTEM STATUS ---------- */
+  const statusEl = document.getElementById("systemStatus");
+  const speechSupported = ("webkitSpeechRecognition" in window) || ("SpeechRecognition" in window);
+  if(speechSupported){
+    statusEl.textContent = "Online";
+    statusEl.classList.add("ok");
+  } else {
+    statusEl.textContent = "Voice Unsupported";
+    statusEl.classList.add("bad");
+  }
+
+  /* ---------- MANUAL FORMS ---------- */
+  document.getElementById("visitorForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    const name = document.getElementById("visitorName").value.trim();
+    const phone = document.getElementById("visitorPhone").value.trim();
+    const person = document.getElementById("visitorPerson").value.trim();
+    const purpose = document.getElementById("visitorPurpose").value.trim();
+    if(!name){
+      showMessage("visitorMessage", "Visitor name is required.", true);
+      return;
+    }
+    state.visitors.push({ name, phone, person, purpose, loggedAt: new Date().toLocaleString() });
+    renderAll();
+    showMessage("visitorMessage", `Visitor "${name}" registered successfully.`, false);
+    this.reset();
+  });
+
+  document.getElementById("appointmentForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    const name = document.getElementById("appointmentName").value.trim();
+    const phone = document.getElementById("appointmentPhone").value.trim();
+    const person = document.getElementById("appointmentPerson").value.trim();
+    const date = document.getElementById("appointmentDate").value;
+    const time = document.getElementById("appointmentTime").value;
+    const purpose = document.getElementById("appointmentPurpose").value.trim();
+    if(!name || !person || !date || !time){
+      showMessage("appointmentMessage", "Name, person to meet, date and time are required.", true);
+      return;
+    }
+    state.appointments.push({ name, phone, person, date, time, purpose, source:"manual" });
+    renderAll();
+    showMessage("appointmentMessage", `Appointment booked for "${name}" with ${person}.`, false);
+    this.reset();
+  });
+
+  function showMessage(elId, text, isErr){
+    const el = document.getElementById(elId);
+    el.textContent = text;
+    el.className = isErr ? "msg-err" : "msg-ok";
+    setTimeout(()=>{ el.textContent = ""; el.className = ""; }, 5000);
+  }
+
+  /* ---------- SPEECH RECOGNITION HELPERS ---------- */
+  const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  function speak(text){
+    if(!("speechSynthesis" in window)) return;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 1;
+    utter.pitch = 1;
+    window.speechSynthesis.speak(utter);
+  }
+
+  // Extract a field value spoken after any of the given keyword phrases,
+  // stopping at the next known keyword or end of string.
+  const ALL_KEYWORDS =[
+    "name is","name","phone number is","phone is","phone","contact number is",
+    "meet","with doctor","with","on date","on","at time","at","purpose is","purpose",
+    "reason is","reason","for"
+  ];
+  function extractField(text, keywords){
+    const lower = text.toLowerCase();
+    for(const kw of keywords){
+      const idx = lower.indexOf(kw);
+      if(idx === -1) continue;
+      let start = idx + kw.length;
+      let rest = text.slice(start).trim();
+      // cut off at the next keyword occurrence
+      let cutPos = rest.length;
+      const restLower = rest.toLowerCase();
+      ALL_KEYWORDS.forEach(other=>{
+        if(keywords.includes(other)) return;
+        const p = restLower.indexOf(" " + other + " ");
+        if(p !== -1 && p < cutPos) cutPos = p;
+      });
+      const val = rest.slice(0, cutPos).replace(/[,.]$/,"").trim();
+      if(val) return val;
+    }
+    return "";
+  }
+
+  function parsePhone(text){
+    const digits = text.match(/(\+?\d[\d\s-]{6,}\d)/);
+    return digits ? digits[0].replace(/[\s-]/g,"") : "";
+  }
+
+  function parseTimeToHHMM(text){
+    const m = text.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+    if(!m) return "";
+    let h = parseInt(m[1],10);
+    let min = m[2] ? parseInt(m[2],10) : 0;
+    const ap = m[3] ? m[3].toLowerCase() : null;
+    if(ap === "pm" && h < 12) h += 12;
+    if(ap === "am" && h === 12) h = 0;
+    if(h > 23) return "";
+    return String(h).padStart(2,"0") + ":" + String(min).padStart(2,"0");
+  }
+
+  const MONTHS = ["january","february","march","april","may","june","july",
+    "august","september","october","november","december"];
+  function parseDateToISO(text){
+    const lower = text.toLowerCase();
+    for(let i=0;i<MONTHS.length;i++){
+      const mIdx = lower.indexOf(MONTHS[i]);
+      if(mIdx !== -1){
+        const after = lower.slice(mIdx + MONTHS[i].length);
+        const dayMatch = after.match(/(\d{1,2})/);
+        if(dayMatch){
+          const day = parseInt(dayMatch[1],10);
+          let year = new Date().getFullYear();
+          const yearMatch = lower.match(/\b(20\d{2})\b/);
+          if(yearMatch) year = parseInt(yearMatch[1],10);
+          const mm = String(i+1).padStart(2,"0");
+          const dd = String(day).padStart(2,"0");
+          return `${year}-${mm}-${dd}`;
+        }
+      }
+    }
+    if(lower.includes("today")){
+      return new Date().toISOString().slice(0,10);
+    }
+    if(lower.includes("tomorrow")){
+      const d = new Date(); d.setDate(d.getDate()+1);
+      return d.toISOString().slice(0,10);
+    }
+    return "";
+  }
+
+  function parseCommand(transcript){
+    return {
+      name: extractField(transcript, ["name is","name"]),
+      phone: parsePhone(transcript),
+      person: extractField(transcript, ["with doctor","meet","with"]),
+      purpose: extractField(transcript, ["purpose is","purpose","reason is","reason","for"]),
+      date: parseDateToISO(transcript),
+      time: parseTimeToHHMM(transcript)
+    };
+  }
+
+  /* ---------- FORM-FILL MIC (Visitor / Appointment sections) ---------- */
+  function setupFormMic(btnId, statusId, transcriptId, fillFn){
+    const btn = document.getElementById(btnId);
+    if(!SpeechRecognitionAPI){
+      btn.disabled = true;
+      document.getElementById(statusId).textContent = "Voice recognition not supported in this browser.";
+      return;
+    }
+    let recognizing = false;
+    const recognition = new SpeechRecognitionAPI();
+    recognition.lang = "en-US";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+
+    btn.addEventListener("click", ()=>{
+      if(recognizing){ recognition.stop(); return; }
+      recognition.start();
+    });
+
+    recognition.onstart = ()=>{
+      recognizing = true;
+      btn.classList.add("listening");
+      btn.textContent = "🎤 Listening...";
+      document.getElementById(statusId).textContent = "Listening — speak the details now.";
+    };
+    recognition.onresult = (event)=>{
+      let transcript = "";
+      for(let i=0;i<event.results.length;i++){
+        transcript += event.results[i][0].transcript;
+      }
+      document.getElementById(transcriptId).textContent = `"${transcript}"`;
+      if(event.results[event.results.length-1].isFinal){
+        fillFn(parseCommand(transcript), transcript);
+      }
+    };
+    recognition.onerror = (e)=>{
+      document.getElementById(statusId).textContent = "Error: " + e.error;
+    };
+    recognition.onend = ()=>{
+      recognizing = false;
+      btn.classList.remove("listening");
+      btn.textContent = "🎤 Use Microphone";
+      document.getElementById(statusId).textContent = "Voice assistant ready.";
+    };
+  }
+
+  setupFormMic("visitorMicBtn","visitorVoiceStatus","visitorTranscript",(data)=>{
+    if(data.name) document.getElementById("visitorName").value = data.name;
+    if(data.phone) document.getElementById("visitorPhone").value = data.phone;
+    if(data.person) document.getElementById("visitorPerson").value = data.person;
+    if(data.purpose) document.getElementById("visitorPurpose").value = data.purpose;
+  });
+
+  setupFormMic("appointmentMicBtn","appointmentVoiceStatus","appointmentTranscript",(data)=>{
+    if(data.name) document.getElementById("appointmentName").value = data.name;
+    if(data.phone) document.getElementById("appointmentPhone").value = data.phone;
+    if(data.person) document.getElementById("appointmentPerson").value = data.person;
+    if(data.date) document.getElementById("appointmentDate").value = data.date;
+    if(data.time) document.getElementById("appointmentTime").value = data.time;
+    if(data.purpose) document.getElementById("appointmentPurpose").value = data.purpose;
+  });
+
+  /* ---------- GLOBAL LIVE VOICE ASSISTANT (auto-books appointments) ---------- */
+  const globalBtn = document.getElementById("globalMicBtn");
+  const globalStatus = document.getElementById("voiceStatus");
+  const globalTranscript = document.getElementById("voiceTranscript");
+
+  if(!SpeechRecognitionAPI){
+    globalBtn.disabled = true;
+    globalStatus.textContent = "Voice recognition is not supported in this browser. Try Chrome or Edge.";
+  } else {
+    let listening = false;
+    const recognizer = new SpeechRecognitionAPI();
+    recognizer.lang = "en-US";
+    recognizer.continuous = true;
+    recognizer.interimResults = true;
+
+    globalBtn.addEventListener("click", ()=>{
+      if(listening){ recognizer.stop(); return; }
+      recognizer.start();
+    });
+
+    recognizer.onstart = ()=>{
+      listening = true;
+      globalBtn.classList.add("listening");
+      globalBtn.textContent = "🎤 Listening... (click to stop)";
+      globalStatus.textContent = "Listening continuously. Say a full booking request.";
+      speak("Voice assistant activated. I'm listening.");
+    };
+
+    recognizer.onend = ()=>{
+      listening = false;
+      globalBtn.classList.remove("listening");
+      globalBtn.textContent = "🎤 Start Voice Assistant";
+      globalStatus.textContent = "Voice assistant ready.";
+    };
+
+    recognizer.onerror = (e)=>{
+      globalStatus.textContent = "Error: " + e.error;
+    };
+
+    let finalBuffer = "";
+    recognizer.onresult = (event)=>{
+      let interim = "";
+      for(let i=event.resultIndex;i<event.results.length;i++){
+        const text = event.results[i][0].transcript;
+        if(event.results[i].isFinal){
+          finalBuffer += " " + text;
+          globalTranscript.textContent = `"${finalBuffer.trim()}"`;
+          handleLiveUtterance(finalBuffer.trim());
+          finalBuffer = "";
+        } else {
+          interim += text;
+          globalTranscript.textContent = `"${interim}"`;
+        }
+      }
+    };
+
+    function handleLiveUtterance(utterance){
+      const lower = utterance.toLowerCase();
+      const wantsBooking = lower.includes("book") || lower.includes("appointment") || lower.includes("schedule");
+      const wantsVisitor = (lower.includes("register") || lower.includes("visitor")) && !wantsBooking;
+
+      if(wantsBooking){
+        const data = parseCommand(utterance);
+        if(!data.name || !data.person){
+          globalStatus.textContent = "Heard a booking request but missing name or person to meet — please repeat with both.";
+          speak("Sorry, I need both the visitor's name and who they want to meet. Please repeat.");
+          return;
+        }
+        const appt = {
+          name: data.name,
+          phone: data.phone,
+          person: data.person,
+          date: data.date || new Date().toISOString().slice(0,10),
+          time: data.time || "",
+          purpose: data.purpose,
+          source: "voice"
+        };
+        state.appointments.push(appt);
+        renderAll();
+        const confirmText = `Appointment booked for ${appt.name} with ${appt.person}` +
+          (appt.date ? ` on ${appt.date}` : "") + (appt.time ? ` at ${appt.time}` : "") + ".";
+        globalStatus.textContent = "✅ " + confirmText;
+        speak(confirmText);
+      } else if(wantsVisitor){
+        const data = parseCommand(utterance);
+        if(!data.name){
+          globalStatus.textContent = "Heard a visitor registration but missing the name — please repeat.";
+          speak("Sorry, I didn't catch the visitor's name. Please repeat.");
+          return;
+        }
+        state.visitors.push({
+          name: data.name, phone: data.phone, person: data.person,
+          purpose: data.purpose, loggedAt: new Date().toLocaleString()
+        });
+        renderAll();
+        const confirmText = `Visitor ${data.name} registered successfully.`;
+        globalStatus.textContent = "✅ " + confirmText;
+        speak(confirmText);
+      } else {
+        globalStatus.textContent = 'Say "book an appointment for..." or "register visitor..." to take action.';
+      }
+    }
+  }
+
+  /* ---------- INIT ---------- */
+  loadState();
+  renderAll();
+})();
+</script>
+
+</body>
+</html>
