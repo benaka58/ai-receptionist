@@ -2,207 +2,232 @@
 <html lang="en">
 
 <head>
+    <meta charset="UTF-8">
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Receptionist - Login</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-  <style>
-    :root{
-      --bg:#0f1420;
-      --panel:#1b2338;
-      --panel-2:#212b45;
-      --border:#2a3452;
-      --text:#e8ecf7;
-      --text-dim:#9aa4c0;
-      --accent:#6c8dff;
-      --accent-2:#8e6cff;
-      --accent-glow:rgba(108,141,255,0.35);
-      --bad:#ff6b6b;
-      --radius:14px;
-    }
+    <title>AI Receptionist - Admin Login</title>
 
-    *{ box-sizing:border-box; }
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-    html, body{
-      height:100%;
-      margin:0;
-    }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #101827, #243b55);
+            color: white;
+        }
 
-    body{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
-      color:var(--text);
-      background:radial-gradient(circle at 20% -10%, #1a2340 0%, var(--bg) 45%);
-      padding:24px;
-    }
+        .login-box {
+            width: 90%;
+            max-width: 400px;
+            padding: 35px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
+        }
 
-    .login-card{
-      width:100%;
-      max-width:380px;
-      background:linear-gradient(160deg, var(--panel), var(--panel-2));
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      padding:38px 34px 32px;
-      box-shadow:0 20px 60px rgba(0,0,0,0.35);
-    }
+        h1 {
+            text-align: center;
+            margin-bottom: 8px;
+        }
 
-    .mark{
-      width:56px;
-      height:56px;
-      margin:0 auto 20px;
-      border-radius:16px;
-      background:linear-gradient(135deg, var(--accent), var(--accent-2));
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
+        .subtitle {
+            text-align: center;
+            margin-bottom: 28px;
+            color: #dbeafe;
+        }
 
-    .mark svg{ width:28px; height:28px; }
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 7px;
+        }
 
-    .bars{ display:flex; align-items:center; gap:3px; }
-    .bars rect{ fill:#fff; }
+        input {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
 
-    h1{
-      margin:0 0 4px;
-      font-size:1.3rem;
-      font-weight:600;
-      text-align:center;
-      letter-spacing:.2px;
-    }
+        button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #22c7f2;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-    h2{
-      margin:0 0 28px;
-      font-size:.9rem;
-      font-weight:400;
-      text-align:center;
-      color:var(--text-dim);
-    }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
 
-    form{
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-    }
-
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-
-    label{
-      font-size:.82rem;
-      color:var(--text-dim);
-    }
-
-    input{
-      background:var(--bg);
-      border:1px solid var(--border);
-      color:var(--text);
-      padding:12px 14px;
-      border-radius:9px;
-      font-size:.95rem;
-      transition:border-color .15s, box-shadow .15s;
-    }
-
-    input::placeholder{ color:#5c6685; }
-
-    input:focus{
-      outline:none;
-      border-color:var(--accent);
-      box-shadow:0 0 0 3px var(--accent-glow);
-    }
-
-    button[type="submit"]{
-      margin-top:6px;
-      background:linear-gradient(90deg, var(--accent), var(--accent-2));
-      border:none;
-      color:#fff;
-      padding:13px 18px;
-      border-radius:9px;
-      font-size:.98rem;
-      font-weight:600;
-      cursor:pointer;
-      transition:transform .15s, opacity .15s;
-    }
-
-    button[type="submit"]:hover{ opacity:.92; }
-    button[type="submit"]:active{ transform:translateY(1px); }
-
-    #message{
-      min-height:1.2em;
-      margin:16px 0 0;
-      font-size:.85rem;
-      text-align:center;
-      color:var(--bad);
-    }
-
-    #message:empty{ margin:0; }
-
-    .footnote{
-      margin-top:22px;
-      text-align:center;
-      font-size:.75rem;
-      color:#5c6685;
-    }
-  </style>
-
+        #message {
+            text-align: center;
+            margin-top: 18px;
+            color: #ffd166;
+            min-height: 20px;
+        }
+    </style>
 </head>
 
 <body>
 
-  <div class="login-card">
+    <div class="login-box">
 
-    <div class="mark">
-      <svg class="bars" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2"  y="10" width="3.2" height="8"  rx="1.6"/>
-        <rect x="8"  y="5"  width="3.2" height="18" rx="1.6"/>
-        <rect x="14" y="8"  width="3.2" height="12" rx="1.6"/>
-        <rect x="20" y="2"  width="3.2" height="24" rx="1.6"/>
-      </svg>
+        <h1>AI Receptionist</h1>
+
+        <div class="subtitle">
+            Administrator Login
+        </div>
+
+        <form id="loginForm">
+
+            <label for="username">
+                Username
+            </label>
+
+            <input
+                id="username"
+                name="username"
+                type="text"
+                placeholder="Enter your username"
+                required
+            >
+
+            <label for="password">
+                Password
+            </label>
+
+            <input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Enter your password"
+                required
+            >
+
+            <button
+                id="loginButton"
+                type="submit"
+            >
+                Login
+            </button>
+
+        </form>
+
+        <p id="message"></p>
+
     </div>
 
-    <h1>AI Receptionist</h1>
-    <h2>Administrator Login</h2>
+    <script>
+        "use strict";
 
-    <form id="loginForm">
+        const loginForm =
+            document.getElementById("loginForm");
 
-      <div class="field">
-        <label for="username">Username</label>
-        <input
-          id="username"
-          name="username"
-          type="text"
-          placeholder="Enter your username"
-          required
-        >
-      </div>
+        const usernameInput =
+            document.getElementById("username");
 
-      <div class="field">
-        <label for="password">Password</label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          placeholder="Enter your password"
-          required
-        >
-      </div>
+        const passwordInput =
+            document.getElementById("password");
 
-      <button type="submit">Login</button>
+        const loginButton =
+            document.getElementById("loginButton");
 
-    </form>
+        const message =
+            document.getElementById("message");
 
-    <p id="message"></p>
+        loginForm.addEventListener(
+            "submit",
+            async function (event) {
 
-    <p class="footnote">Authorized personnel only</p>
+                event.preventDefault();
 
-  </div>
+                const username =
+                    usernameInput.value.trim();
 
-  <script src="login.js"></script>
+                const password =
+                    passwordInput.value;
+
+                if (!username || !password) {
+                    message.textContent =
+                        "Please enter username and password.";
+
+                    return;
+                }
+
+                loginButton.disabled = true;
+                loginButton.textContent = "Signing in...";
+                message.textContent = "";
+
+                try {
+
+                    const response =
+                        await fetch("/api/login", {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            credentials: "same-origin",
+
+                            body: JSON.stringify({
+                                username: username,
+                                password: password
+                            })
+                        });
+
+                    const data =
+                        await response.json();
+
+                    if (!response.ok || !data.success) {
+
+                        throw new Error(
+                            data.message ||
+                            data.error ||
+                            "Invalid username or password."
+                        );
+                    }
+
+                    message.style.color = "#8affc1";
+                    message.textContent =
+                        "Login successful. Opening dashboard...";
+
+                    window.location.href = "/admin";
+
+                } catch (error) {
+
+                    message.style.color = "#ffd166";
+                    message.textContent =
+                        error.message ||
+                        "Login failed. Please try again.";
+
+                    loginButton.disabled = false;
+                    loginButton.textContent = "Login";
+                }
+            }
+        );
+    </script>
 
 </body>
 
