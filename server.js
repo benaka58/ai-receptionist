@@ -1421,4 +1421,55 @@ async function startServer() {
    START
    ============================================================ */
 
-startServer();
+   async function startServer() {
+    try {
+        await database.initializeDatabase();
+
+        const server = app.listen(
+            PORT,
+            HOST,
+            function () {
+                console.log(
+                    "AI Receptionist server running at http://localhost:" +
+                    PORT
+                );
+            }
+        );
+
+        function shutdown(signal) {
+            console.log(signal + " received.");
+
+            server.close(function () {
+                try {
+                    database.close();
+                } catch (error) {
+                    console.error("Shutdown error:", error);
+                }
+
+                process.exit(0);
+            });
+        }
+
+        process.on("SIGINT", function () {
+            shutdown("SIGINT");
+        });
+
+        process.on("SIGTERM", function () {
+            shutdown("SIGTERM");
+        });
+
+    } catch (error) {
+        console.error(
+            "Unable to start AI Receptionist:",
+            error
+        );
+
+        process.exit(1);
+    }
+}
+
+if (require.main === module) {
+    startServer();
+}
+
+module.exports = app;
